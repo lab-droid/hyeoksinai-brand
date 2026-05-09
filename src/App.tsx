@@ -564,6 +564,10 @@ function Footer() {
 }
 
 export default function App() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="bg-charcoal min-h-screen text-snow font-sans">
       <GlobalNav />
