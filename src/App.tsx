@@ -2,21 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, CheckCircle, ChevronRight, MessageCircle, Sparkles, TrendingUp, Users, Presentation, ShieldCheck, Zap, AlertCircle } from 'lucide-react';
 
-const KAKAO_LINK = "#kakao-link-placeholder";
+const CONSULTATION_LINK = "https://docs.google.com/forms/d/e/1FAIpQLSfo7-SGmbWyqL4-v30AwtJnBJdwiGvx3Fkw-QsnM-IQU8hABQ/viewform?usp=dialog";
 
-function KakaoButton({ className, children }: { className?: string, children: React.ReactNode }) {
+function PrimaryCTAButton({ className, children, subtitle }: { className?: string, children: React.ReactNode, subtitle?: string }) {
   return (
     <div className="flex flex-col items-center group">
       <a 
-        href={KAKAO_LINK} 
+        href={CONSULTATION_LINK} 
         target="_blank" 
         rel="noopener noreferrer"
-        className={`relative overflow-hidden group bg-electric text-white font-semibold py-4 px-8 rounded-full flex items-center gap-2 hover:scale-[1.02] transition-transform duration-300 ${className}`}
+        className={`relative overflow-hidden group bg-electric text-white font-bold py-4 px-8 rounded-full flex items-center gap-2 hover:scale-[1.02] transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] ${className}`}
       >
         <span className="absolute inset-0 w-full h-full bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-out" />
-        {children}
+        <span className="relative flex items-center">{children}</span>
       </a>
-      <span className="text-xs text-slate mt-2 tracking-wide font-medium">전문가가 1분 내로 확인합니다</span>
+      {subtitle && <span className="text-xs text-slate mt-3 tracking-wide font-medium">{subtitle}</span>}
     </div>
   );
 }
@@ -55,9 +55,9 @@ function Hero() {
           <p className="text-lg md:text-xl text-slate mb-10 max-w-2xl mx-auto font-light text-balance leading-relaxed">
             막연한 감에 의존하는 시대는 끝났습니다. 데이터 기반의 압도적인 AI 분석으로 귀하의 비즈니스를 독보적인 브랜드로 진화시킵니다.
           </p>
-          <KakaoButton className="text-lg">
-            지금 바로 AI 무료 진단받기 <ArrowRight className="w-5 h-5 ml-1" />
-          </KakaoButton>
+          <PrimaryCTAButton className="text-lg" subtitle="전문가가 1분 내로 확인합니다">
+            지금 바로 맞춤 상담 신청하기 <ArrowRight className="w-5 h-5 ml-1" />
+          </PrimaryCTAButton>
         </motion.div>
       </div>
     </section>
@@ -234,9 +234,9 @@ function Portfolio() {
             <h2 className="text-3xl md:text-5xl font-bold mb-4">압도적인 성공 사례</h2>
             <p className="text-slate text-lg">숫자가 증명하는 AI 마케팅의 파괴력.</p>
           </div>
-          <KakaoButton className="py-3 px-6 text-sm">
-            내 업종 성공전략 묻기
-          </KakaoButton>
+          <PrimaryCTAButton className="py-3 px-8 text-sm">
+            내 업종 맞춤 전략 받기
+          </PrimaryCTAButton>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -295,225 +295,38 @@ function UpsellBanner() {
   );
 }
 
-const FORM_STEPS = [
-  { id: 'name', label: '성함', type: 'text', placeholder: '홍길동' },
-  { id: 'phone', label: '연락처', type: 'tel', placeholder: '010-0000-0000' },
-  { id: 'industry', label: '업종', type: 'text', placeholder: '예: 요식업, IT, 교육' },
-  { id: 'revenue', label: '월 평균 매출', type: 'text', placeholder: '예: 1,000만원' },
-  { id: 'painpoint', label: '현재 가장 큰 고민', type: 'textarea', placeholder: '최근 신규 고객 유입이 줄어들어 고민입니다.' }
-];
-
-function LeadGenForm() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<Record<string, string>>({});
-  const [error, setError] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
-
-  // Load from LocalStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('ai_agency_form');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.currentStep !== undefined && parsed.formData) {
-          if (!parsed.isCompleted) {
-             setFormData(parsed.formData);
-             setCurrentStep(Math.min(parsed.currentStep, FORM_STEPS.length - 1));
-          }
-        }
-      } catch (e) {}
-    }
-  }, []);
-
-  // Save to LocalStorage
-  useEffect(() => {
-    localStorage.setItem('ai_agency_form', JSON.stringify({ currentStep, formData, isCompleted }));
-  }, [currentStep, formData, isCompleted]);
-
-  const handleNext = () => {
-    const step = FORM_STEPS[currentStep];
-    const value = formData[step.id] || "";
-    
-    if (!value.trim()) {
-      setError("필수 항목입니다.");
-      return;
-    }
-    
-    if (step.id === 'phone' && !/^[0-9-]{9,13}$/.test(value)) {
-       setError("올바른 연락처 형식이 아닙니다.");
-       return;
-    }
-
-    setError("");
-    if (currentStep < FORM_STEPS.length - 1) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      submitForm();
-    }
-  };
-
-  const submitForm = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setIsGenerating(false);
-      setIsCompleted(true);
-    }, 2500);
-  };
-
-  const currentStepData = FORM_STEPS[currentStep];
-
+function ConsultationSection() {
   return (
-    <section className="py-24 px-6 relative" id="diagnosis">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">단 1분, 무료 진단 신청</h2>
-          <p className="text-slate text-lg">AI가 귀하의 비즈니스 구조를 분석합니다.</p>
-        </div>
-
-        <div className="glass-panel p-8 md:p-12 rounded-3xl relative overflow-hidden">
-          {/* Progress Bar overall */}
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-white/5">
-            <div 
-              className="h-full bg-electric transition-all duration-500 ease-out"
-              style={{ width: isCompleted ? '100%' : `${(currentStep / FORM_STEPS.length) * 100}%` }}
-            />
+    <section className="py-24 px-6 relative" id="consultation">
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] md:w-[40vw] md:h-[40vw] bg-electric/20 rounded-full blur-[100px]" />
+      </div>
+      <div className="max-w-4xl mx-auto relative z-10">
+        <div className="glass-panel p-10 md:p-16 rounded-[3rem] text-center border-electric/30 shadow-[0_0_50px_rgba(168,85,247,0.15)] relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-electric/0 via-electric/10 to-electric/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+          
+          <div className="w-20 h-20 mx-auto bg-electric/10 rounded-full flex items-center justify-center mb-8 border border-electric/30">
+            <Sparkles className="w-10 h-10 text-electric drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]" />
           </div>
-
-          <AnimatePresence mode="wait">
-            {!isGenerating && !isCompleted && (
-              <motion.div
-                key="form"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex flex-col h-full"
-              >
-                <div className="mb-8">
-                  <span className="text-electric font-mono text-sm mb-2 block">STEP 0{currentStep + 1}</span>
-                  <h3 className="text-2xl font-bold">{currentStepData.label}을(를) 입력해주세요.</h3>
-                </div>
-
-                <motion.div 
-                  className="mb-8 relative"
-                  animate={error ? { x: [-6, 6, -6, 6, 0] } : {}}
-                  transition={{ duration: 0.4 }}
-                >
-                  {currentStepData.type === 'textarea' ? (
-                     <textarea
-                       autoFocus
-                       className={`w-full bg-charcoal/50 border ${error ? 'border-electric' : 'border-white/10'} rounded-xl px-4 py-4 text-snow focus:outline-none focus:border-electric transition-colors min-h-[120px] resize-none`}
-                       placeholder={currentStepData.placeholder}
-                       value={formData[currentStepData.id] || ""}
-                       onChange={(e) => {
-                         setFormData(prev => ({ ...prev, [currentStepData.id]: e.target.value }));
-                         setError("");
-                       }}
-                       onKeyDown={(e) => {
-                         if (e.key === 'Enter' && e.metaKey) handleNext();
-                       }}
-                     />
-                  ) : (
-                    <input
-                      autoFocus
-                      type={currentStepData.type}
-                      className={`w-full bg-charcoal/50 border ${error ? 'border-electric' : 'border-white/10'} rounded-xl px-4 py-4 text-snow focus:outline-none focus:border-electric transition-colors text-lg`}
-                      placeholder={currentStepData.placeholder}
-                      value={formData[currentStepData.id] || ""}
-                      onChange={(e) => {
-                        setFormData(prev => ({ ...prev, [currentStepData.id]: e.target.value }));
-                        setError("");
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleNext();
-                      }}
-                    />
-                  )}
-                  {error && (
-                    <motion.div 
-                      key={error}
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute -bottom-7 left-0 text-electric text-sm flex items-center font-medium"
-                    >
-                      <AlertCircle className="w-4 h-4 mr-1" /> {error}
-                    </motion.div>
-                  )}
-                </motion.div>
-
-                <div className="flex justify-between items-center mt-auto">
-                  <button
-                    onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
-                    className={`text-slate hover:text-snow transition-colors px-4 py-2 ${currentStep === 0 ? 'invisible' : ''}`}
-                  >
-                    이전으로
-                  </button>
-                  <button
-                    onClick={handleNext}
-                    className="bg-snow text-charcoal font-bold py-3 px-8 rounded-full hover:bg-white transition-colors flex items-center"
-                  >
-                    {currentStep === FORM_STEPS.length - 1 ? '결과 확인하기' : '다음으로'} <ArrowRight className="w-4 h-4 ml-2" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {isGenerating && (
-              <motion.div
-                key="generating"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="py-12 flex flex-col items-center justify-center text-center space-y-6"
-              >
-                <div className="w-full max-w-sm h-2 bg-charcoal rounded-full overflow-hidden mb-4">
-                   <motion.div 
-                     className="h-full bg-gradient-to-r from-electric to-fuchsia-400"
-                     initial={{ width: "0%" }}
-                     animate={{ width: "100%" }}
-                     transition={{ duration: 2.5, ease: "linear" }}
-                   />
-                </div>
-                <h3 className="text-2xl font-bold text-snow">진단 보고서 생성 중...</h3>
-                <p className="text-slate">AI가 최고의 스케일업 전략을 도출하고 있습니다.</p>
-              </motion.div>
-            )}
-
-            {isCompleted && (
-              <motion.div
-                key="completed"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="py-8 flex flex-col items-center text-center stretch"
-              >
-                <div className="w-20 h-20 rounded-full bg-electric/20 flex items-center justify-center mb-6">
-                  <CheckCircle className="w-10 h-10 text-electric" />
-                </div>
-                <h3 className="text-3xl font-bold mb-4">진단이 완료되었습니다.</h3>
-                <div className="bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-300 px-6 py-3 rounded-lg font-semibold mb-8 flex items-center">
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  한정 수량! 이번 달 무료 진단은 단 2석 남았습니다.
-                </div>
-                <p className="text-slate mb-8 max-w-md mx-auto">
-                  {formData['name']} 대표님을 위한 1:1 맞춤형 마케팅 전략이 준비되었습니다. 담당자가 곧 카카오톡으로 보고서를 발송해드립니다.
-                </p>
-                <KakaoButton>
-                  카카오톡으로 즉시 받아보기
-                </KakaoButton>
-                <button 
-                  onClick={() => {
-                    setIsCompleted(false);
-                    setCurrentStep(0);
-                    setFormData({});
-                    localStorage.removeItem('ai_agency_form');
-                  }}
-                  className="mt-6 text-sm text-slate underline hover:text-snow"
-                >
-                  새로 입력하기
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 text-snow text-balance">
+            비즈니스의 판도를 바꿀 준비가 되셨나요?
+          </h2>
+          <p className="text-lg md:text-xl text-slate/90 mb-10 max-w-2xl mx-auto font-light text-balance leading-relaxed">
+            더 이상 고민하지 마세요. 혁신적인 AI 분석과 전문가의 인사이트로 당신의 브랜드에 가장 확실한 성장 공식을 제시합니다.
+          </p>
+          
+          <a 
+            href={CONSULTATION_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center relative overflow-hidden bg-electric text-white font-bold text-lg md:text-xl py-5 px-10 md:px-14 rounded-full hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.6)] hover:shadow-[0_0_40px_rgba(168,85,247,0.8)] mx-auto"
+          >
+            <span className="absolute inset-0 w-full h-full bg-white/20 -translate-x-full hover:translate-x-full transition-transform duration-500 ease-out" />
+            <span className="relative flex items-center gap-3">
+              맞춤 상담 신청하기 <ArrowRight className="w-6 h-6" />
+            </span>
+          </a>
+          <p className="mt-6 text-sm text-slate font-medium">안내에 따라 폼을 작성해 주시면, 전문가가 신속하게 연락드립니다.</p>
         </div>
       </div>
     </section>
@@ -529,10 +342,19 @@ function GlobalNav() {
         </div>
         혁신 AI
       </div>
-      <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate">
-        <a href="#simulator" className="hover:text-snow transition-colors">AI 시뮬레이터</a>
-        <a href="#portfolio" className="hover:text-snow transition-colors">성공 사례</a>
-        <a href="#diagnosis" className="hover:text-snow transition-colors">무료 진단</a>
+      <div className="hidden md:flex items-center gap-8 justify-end flex-1">
+        <div className="flex items-center gap-6 text-sm font-medium text-slate mr-4">
+          <a href="#simulator" className="hover:text-snow transition-colors">AI 시뮬레이터</a>
+          <a href="#portfolio" className="hover:text-snow transition-colors">성공 사례</a>
+        </div>
+        <a 
+          href={CONSULTATION_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-white/10 hover:bg-white/20 border border-white/20 text-snow text-sm font-bold py-2.5 px-6 rounded-full transition-all flex items-center gap-2 hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] hover:border-electric/50"
+        >
+          맞춤 상담 바로가기 <ArrowRight className="w-4 h-4" />
+        </a>
       </div>
     </nav>
   );
@@ -542,10 +364,12 @@ function MobileStickyCTA() {
   return (
     <div className="md:hidden fixed bottom-0 left-0 w-full p-4 z-50 bg-gradient-to-t from-charcoal via-charcoal/90 to-transparent pb-6">
       <a 
-        href="#diagnosis" 
-        className="block w-full bg-electric text-white text-center font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.4)]"
+        href={CONSULTATION_LINK}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 w-full bg-electric text-white text-center font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.5)] active:scale-95 transition-transform"
       >
-        지금 무료 진단받기
+        맞춤 상담 신청하기 <ArrowRight className="w-5 h-5" />
       </a>
     </div>
   );
@@ -577,7 +401,7 @@ export default function App() {
         <Portfolio />
       </div>
       <UpsellBanner />
-      <LeadGenForm />
+      <ConsultationSection />
       <Footer />
       <MobileStickyCTA />
     </div>
